@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>02806 Social Data Analysis and Visualization</title>
+        <script src="https://d3js.org/d3.v3.js"></script>
+        <!-- for week 1 part 4.2 -->
+        <style>
+            p {
+                font-size: 24px;
+                font-weight: bold; 
+                font-family: Helvetica, Arial, sans-serif;;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="titleHeader">
+        </div>
+        <div id="data">
+        </div>
+        <div id="svg">
+        </div>
+        <script type="text/javascript">
+            // for week 1 part 4.1
+            var dataset = [ 5, 10, 15, 20, 25 ];
+            d3.select("div[id=titleHeader]").append("h1").text("02806 Social Data Analysis and Visualization");
+            d3.select("div[id=data]").selectAll("p").data(dataset).enter().append("p").text(function(d) { 
+                return "I can count up to "+d; 
+            }).style("color",function(d) {
+                if (d > 15) {   //Threshold of 15
+                    return "red";
+                } else {
+                    return "black";
+                }
+            });
+            // for week 1 part 4.2
+            var ids = [0,1,2,3,4];
+            var colors = ["purple","blue","green","yellow","red"];
+            d3.select("div[id=svg]").append("svg").attr("width","500").attr("height","200");
+            d3.select("svg").selectAll("rect").data(ids).enter().append("rect").attr("x",function(d) {
+                return d*50;
+            }).attr("y",function(d) {
+                return 60-d*15;
+            }).attr("width","80").attr("height","80").attr("fill",function(d) {
+                return colors[d];
+            }).attr("stroke","gray").attr("stroke-width","2").attr("opacity",function(d) {
+                return 1.0-d/5.0;
+            });
+        </script>
+    </body>
+</html>

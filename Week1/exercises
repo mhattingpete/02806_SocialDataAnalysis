@@ -1,0 +1,34 @@
+Part 2
+	1.
+	7 most common HTML elements
+	- p
+	- div
+	- body
+	- td
+	- h1
+	- head
+	- a
+
+	2.
+	difference between class and id
+	- id is an identifier whereas class is the definition of the object. So multiple elements can 		have the same class but not the same id
+
+	3.
+	DOM stands for Document Object Model
+	DOM is the interface that enables the use of multiple languages such as html, xml and so on. 		DOM treats the document as a tree structure where each node is an object from the document.
+
+	4.
+	python's array structure is called a list
+
+	5.
+	python's object is defined with class
+
+	6.
+	6.1 - add stroke="gray" stroke-width="2" to the rect elements
+	6.2 - add opacity="1.0" to rect elements with decreasing opacity as we get further right
+	6.3 - change width="30" height="30" to width="80" height="80" in rects
+	6.4 - inverse the order of y coordinates eg. setting y="20" instead of y="0" for the first 		element and so on
+
+Part 4
+	all is done in the webpage html
+
