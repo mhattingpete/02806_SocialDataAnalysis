@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>02806 Social Data Analysis and Visualization</title>
+        <script src="https://d3js.org/d3.v3.js"></script>
+        <!-- for week 1 part 4.2 -->
+        <style>
+            p {
+                font-size: 24px;
+                font-weight: bold; 
+                font-family: Helvetica, Arial, sans-serif;;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="titleHeader">
+            <h1>02806 Social Data Analysis and Visualization</h1>
+        </div>
+        <div id="data">
+        </div>
+        <div id="svg">
+        </div>
+        <script type="text/javascript">
+            // for week 2 part 2.1
+            d3.csv("data.csv",function(error,dataset) {
+                d3.select("div[id=data]").selectAll("p").data(dataset).enter().append("p").text(function(d) { 
+                    return "I can count up to "+d.Data; 
+                }).style("color",function(d) {
+                    if (d.Data > 15) {   //Threshold of 15
+                        return "red";
+                    } else {
+                        return "black";
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

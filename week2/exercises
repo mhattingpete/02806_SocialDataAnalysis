@@ -1,0 +1,10 @@
+1.
+1.1 - 
+1.2 - The eye is trained through evolution for pattern recognition and ananomoly detection and other statistics. The eye is not as well trained for finding a specific pattern in simmiliar patterns.
+1.3 - Simpson's paradox is when the cummulative statistics show a different results than the statistics for each group.
+1.4 - exploratory data analysis is that you can explore data with visual tools, explanatory data analysis is to communicate results
+
+2.
+2.1 - pearsons correlation is defined as p_x,y = cov(X,Y)/sigma_x*sigmax_y, the correlation describes the linear relationship between x and y, one common mistake in using the correlation is to mistake it for causality but this is not true since there can be variables that are left out. 
+2.2 - bar chart is a bar for each group, and historgrams is for intervals (multiple groups combined)
+2.3 - the basic rule to choose bin size with is Sturge's rule: K = 1 + 3.222 * log(N), where K is the number of bins, N is the number of observations in the dataset.
