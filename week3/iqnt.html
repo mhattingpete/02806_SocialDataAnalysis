@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>02806 Social Data Analysis and Visualization</title>
+        <script src="https://d3js.org/d3.v3.js"></script>
+        <style>
+            .axis path,
+            .axis line {
+            	fill: none;
+            	stroke: black;
+            	shape-rendering: crispEdges;
+            }
+            .axis text {
+            	font-family: sans-serif;
+            	font-size: 11px;
+            	fill: olive;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="titleHeader">
+            <h1>02806 Social Data Analysis and Visualization</h1>
+            <p>This is a reproduction of <a href="http://iquantny.tumblr.com/post/129373499164/this-is-quantifiably-the-best-month-to-go-to-the">http://iquantny.tumblr.com/post/129373499164/this-is-quantifiably-the-best-month-to-go-to-the</a></p>
+        </div>
+        <div id="bar"></div>
+        <script type="text/javascript">
+        	// settings for window
+        	var w = 600;
+        	var h = 250;
+
+        	// create window for plot
+            var bar = d3.select("div[id=bar]").append("svg").attr({
+            	width: w,
+            	height: h
+            });
+
+            // load data
+            //d3.csv("green_market.csv",function(error,dataset) {});
+        </script>
+    </body>
+</html>
