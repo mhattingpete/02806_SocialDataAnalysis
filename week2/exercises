@@ -8,3 +8,14 @@
 2.1 - pearsons correlation is defined as p_x,y = cov(X,Y)/sigma_x*sigmax_y, the correlation describes the linear relationship between x and y, one common mistake in using the correlation is to mistake it for causality but this is not true since there can be variables that are left out. 
 2.2 - bar chart is a bar for each group, and historgrams is for intervals (multiple groups combined)
 2.3 - the basic rule to choose bin size with is Sturge's rule: K = 1 + 3.222 * log(N), where K is the number of bins, N is the number of observations in the dataset.
+
+4.
+4.1 - jitter plot is a plot of all data aligned to one axis where you add some noise in either the vertical or horizontal axis to visualize all the observations
+4.2 - this shows the importance of corretly binning and how the bin intervals affect the presentation
+4.3 - the kernel density estimation is distorting the way you see data and therefore doesn't give you a correct interpertation of the data
+4.4 - cdf is harder to extract the same information from than the histograms. As what is the probability of an observation being in this region. But it is good at detecting how much of the data is below and above some point.
+4.5 - a quantile plot is if you change the y- and x-axis of the cdf plot. 
+4.6 - a probability plot is a plot that compares the data to a distribution. And is defined as finding the inverse of the distribution to check for and applying that to the output (response variable).
+4.7 - mean, median and related summary statistics can all be misleading as shown in some of the videos since you can constuct data such that for example the mean is zero but that might be that all data is placed at -1 and 1 instead of 0. And equal cases can be constructed for remaining statistics. 
+4.8 - boxplots is good for displaying the distribution and compare distributions of data
+4.9 - violin plots are better than boxplots at displaying if there are more than one peak in the data.
