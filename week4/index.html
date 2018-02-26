@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>02806 Social Data Analysis and Visualization</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        <style>
+        	h1 {
+        		font-family: Georgia;
+        	}
+        	p {
+        		font-family: Georgia;
+        		font-size: 14px;
+        		line-height: 1.6em;
+        	}
+            .line {
+                fill: none;
+                stroke: red;
+                stroke-width: 2;
+            }
+            .axis path,
+            .axis line {
+            	fill: none;
+            	stroke: black;
+            }
+            .axis text {
+            	font-family: sans-serif;
+            	font-size: 11px;
+            	fill: olive;
+            }
+            #tooltip {
+				position: absolute;
+				width: 150px;
+				height: auto;
+				padding: 5px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			#tooltip.hidden {
+				visibility: hidden;
+			}
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 14px;
+			}
+			path.hidden,circle.hidden,line.hidden {
+				display: none;
+			}
+        </style>
+    </head>
+    <body>
+    	<div class="container">
+	        <div id="titleHeader">
+	            <h1>02806 Social Data Analysis and Visualization</h1>
+	        </div>
+	        <div id="plot"></div><br><br>
+            <div id="marathon_plot">
+            	<div class="dropdown">
+					<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+						Categories
+					</button>
+					<div class="dropdown-menu" id="button_pl">
+						<a class="dropdown-item active" id="all" style="color: white">All data</a>
+						<a class="dropdown-item" id="men">Men</a>
+						<a class="dropdown-item" id="women">Women</a>
+					</div>
+				</div>
+            	<div id="tooltip" class="hidden">
+					<p>Year: <span id="year">0</span></p>
+					<p>Time: <span id="time">0</span></p>
+				</div>
+            </div>
+	    </div>
+        <script type="text/javascript">
+        	// settings for window
+        	var w = 800;
+        	var h = 400;
+        	var padding = 50;
+
+        	// create window for plot
+            var plot = d3.select("div[id=plot]").append("svg").attr("width",w).attr("height",h);
+
+            var rowConverter = function(d) {
+            	return {
+                    year: +d.Year,
+            		date: new Date(+d.Year,0,0),
+            		doct: +d.Math_doctorates_awarded,
+            		uran: parseFloat(d.Uranium_stored_at_US_nuclear_power_plants)
+            	};
+            }
+
+            // load data
+            d3.csv("spurious_correlations.csv",rowConverter,function(error,dataset) {
+
+            	// prints table to the console
+            	//console.table(dataset,['date','doct','uran']);
+
+            	
+            	// scales
+            	var xScale = d3.scaleTime().domain([
+            		d3.min(dataset,function(d) { return d.date; }),
+            		d3.max(dataset,function(d) { return d.date; })
+            		]).range([padding*2,w-padding*2]);
+            	var yScale = d3.scaleLinear().domain([
+                    d3.min(dataset,function(d) { return d.doct; }),
+                    d3.max(dataset,function(d) { return d.doct; })
+                    ]).range([h-padding,padding]);
+                var uranScale = d3.scaleLinear().domain([
+                    d3.min(dataset,function(d) { return d.uran; }),
+                    d3.max(dataset,function(d) { return d.uran; })
+                    ]).range([h-padding,padding]);
+
+                // axis
+                var xAxis = d3.axisBottom().scale(xScale);
+                var yAxis = d3.axisLeft().scale(yScale);
+                var yAltAxis = d3.axisRight().scale(uranScale);
+
+                // define line generator
+                var line1 = d3.line().x(function(d) { return xScale(d.date); }).y(function(d) { return yScale(d.doct); });
+
+                var line2 = d3.line().x(function(d) { return xScale(d.date); }).y(function(d) { return uranScale(d.uran); });
+
+                plot.append("text").attr("x",(w/2)).attr("y",0+(padding/2)).attr("text-anchor","middle").style("font-size","16px").style("text-decoration", "underline").text("Math doctorates awarded correlates with Uranium stored at US nuclear power plants");
+                plot.append("text").attr("x",w/2).attr("y",h).style("text-anchor","middle").text("Year");
+                plot.append("text").attr("x",-(h/2)).attr("y",0).attr("transform","rotate(-90)").attr("dy","1em").style("text-anchor","middle").text("Math doctorates awarded (degrees)");
+                plot.append("text").attr("x",-(h/2)).attr("y",w-padding).attr("transform","rotate(-90)").attr("dy","1em").style("text-anchor","middle").text("Uranium in US power plants (million punds)");
+
+                plot.append("path").datum(dataset).attr("class","line").attr("d",line1).style("stroke","red");
+
+                plot.append("path").datum(dataset).attr("class","line").attr("d",line2).style("stroke","blue");
+
+                // add axis to plot
+                plot.append("g").attr("class","x axis").attr("transform","translate(0,"+(h-padding)+")").call(xAxis);
+                plot.append("g").attr("class","y axis").attr("transform","translate("+padding*2+",0)").call(yAxis);
+                plot.append("g").attr("class","yalt axis").attr("transform","translate("+(w-padding*2)+",0)").call(yAltAxis);
+
+                var circles = plot.selectAll("circle").data(dataset).enter();
+
+                circles.append("circle").attr("r",3.5).attr("cx",function(d) { return xScale(d.date); }).attr("cy",function(d) { return yScale(d.doct); }).style("fill","red").append("title").text(function(d) { return d.year+"\nUranium US power plants: "+d.uran+" million punds\nMath doctorates: "+d.doct+" degrees"; });
+
+                circles.append("circle").attr("r",3.5).attr("cx",function(d) { return xScale(d.date); }).attr("cy",function(d) { return uranScale(d.uran); }).style("fill","blue").append("title").text(function(d) { return d.year+"\nUranium US power plants: "+d.uran+" million punds\nMath doctorates: "+d.doct+" degrees"; });
+            });
+        </script>
+        <script type="text/javascript">
+            // settings for window
+            var w_2 = 900;
+            var h_2 = 500;
+            var padding = 50;
+
+            // create window for plot
+            var mar_plot = d3.select("div[id=marathon_plot]").append("svg").attr("width",w_2).attr("height",h_2);
+            mar_plot.append("g").attr("id","scatter");
+
+            var rowConverter = function(d) {
+                return {
+                    year: +d.Year,
+                    date: new Date(+d.Year,1,1),
+                    time_men: +d.time_men,
+                    time_women: +d.time_women
+                };
+            }
+
+            var pathD = d3.select("g[id=scatter]").selectAll("path");
+
+            // load data
+            d3.csv("boston_marathon_times.csv",rowConverter,function(error,dataset) {
+            	var men_min = d3.min(dataset,function(d) { return d.time_men; })
+            	var men_max = d3.max(dataset,function(d) { return d.time_men; })
+            	var women_min = d3.min(dataset,function(d) {
+            		if (d.time_women > 0) {
+            			return d.time_women;
+            		}
+            		else {
+            			return men_min;
+            		}
+            	});
+            	var women_max = d3.max(dataset,function(d) { return d.time_women; })
+            	var women_min_x = d3.min(dataset,function(d) {
+            		if (d.time_women > 0) {
+            			return d.date;
+            		}
+            		else {
+            			return null;
+            		}
+            	});
+
+                // scales
+                var xScale = d3.scaleTime().domain([
+                    d3.min(dataset,function(d) { return d.date; }),
+                    d3.max(dataset,function(d) { return d.date; })
+                    ]).range([padding*1.5,w_2-padding]);
+                var yScale = d3.scaleLinear().domain([
+                    d3.min([men_min,women_min]),
+                    d3.max([men_max,women_max])
+                    ]).range([h_2-padding,padding]);
+                var menXScale = xScale;
+                var womenXScale = d3.scaleTime().domain([women_min_x,dataset[dataset.length-1].date]).range([padding*1.5,w_2-padding]);
+                var menYScale = d3.scaleLinear().domain([men_min,men_max]).range([h_2-padding,padding]);
+                var womenYScale = d3.scaleLinear().domain([women_min,women_max]).range([h_2-padding,padding]);
+
+                // axis
+                var xAxis = d3.axisBottom().scale(xScale);
+                var yAxis = d3.axisLeft().scale(yScale);
+
+                var diamGenerator = d3.symbol().type(d3.symbolDiamond).size(40);
+                var pathDiam = diamGenerator();
+
+                var circleGenerator = d3.symbol().type(d3.symbolCircle).size(40);
+                var pathCircle = circleGenerator();
+
+                pathD.data(dataset).enter().append('path').attr('transform',function(d) { return 'translate('+xScale(d.date)+','+yScale(d.time_men)+')'; }).attr('d',pathDiam).attr("fill","none").attr("stroke","blue").attr("class","men");
+                pathD.data(dataset).enter().append("circle").attr("r",4).attr("cx",function(d) { return xScale(d.date); }).attr("cy",function(d) { return yScale(d.time_men); }).style("fill","transparent").attr("class","men").on("mouseover", function(d) {
+                	//Get this bar's x/y values, then augment for the tooltip
+					var xPosition = xScale(d.date)+(w_2)/2-padding*1.5;
+					var yPosition = yScale(d.time_men)+h_2+padding;
+					//Update the tooltip position and value
+					d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#year").text(d.year);
+					d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#time").text(d.time_men);
+					//Show the tooltip
+					d3.select("#tooltip").classed("hidden", false);
+				}).on("mouseout",function(d) {
+					d3.select("#tooltip").classed("hidden", true);
+				});
+
+                pathD.data(dataset).enter().append('path').attr('transform',function(d) { return 'translate('+xScale(d.date)+','+yScale(d.time_women)+')'; }).attr('d',pathCircle).attr("fill","none").attr("stroke","red").attr("class","women");
+                pathD.data(dataset).enter().append("circle").attr("r",4).attr("cx",function(d) { return xScale(d.date); }).attr("cy",function(d) { return yScale(d.time_women); }).style("fill","transparent").attr("class","women").on("mouseover", function(d) {
+                	//Get this bar's x/y values, then augment for the tooltip
+					var xPosition = xScale(d.date)+(w_2)/2-padding*1.5;
+					var yPosition = yScale(d.time_women)+h_2+padding;
+					//Update the tooltip position and value
+					d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#year").text(d.year);
+					d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#time").text(d.time_women);
+					//Show the tooltip
+					d3.select("#tooltip").classed("hidden", false);
+				}).on("mouseout",function(d) {
+					d3.select("#tooltip").classed("hidden", true);
+				});
+
+                // add axis to plot
+                mar_plot.append("g").attr("class","x axis").attr("transform","translate(0,"+(h_2-padding)+")").call(xAxis);
+                mar_plot.append("g").attr("class","y axis").attr("transform","translate("+padding*1.5+",0)").call(yAxis);
+
+                // add axis labels and title
+                mar_plot.append("text").attr("x",(w_2/2)).attr("y",0+(padding/2)).attr("text-anchor","middle").style("font-size","16px").style("text-decoration", "underline").text("Winning times for annual marathon event, separately for men and women");
+                mar_plot.append("text").attr("x",w_2/2).attr("y",h_2).style("text-anchor","middle").text("Year");
+                mar_plot.append("text").attr("x",-(h_2/2)).attr("y",0).attr("transform","rotate(-90)").attr("dy","1em").style("text-anchor","middle").text("Winner time (in minutes)");
+
+                // trend lines
+                // for men times
+                // get the x and y values for least squares
+                var xLabels = dataset.map(function (d) { return d.date; });
+				var xSeries = d3.range(1, xLabels.length + 1);
+				var ySeries = dataset.map(function(d) { return +d.time_men; });
+				var leastSquaresCoeff = leastSquares(xSeries, ySeries);
+				// apply the reults of the least squares regression
+				var x1 = xLabels[0];
+				var y1 = leastSquaresCoeff[0] + leastSquaresCoeff[1];
+				var x2 = xLabels[xLabels.length - 1];
+				var y2 = leastSquaresCoeff[0] * xSeries.length + leastSquaresCoeff[1];
+				var trendDataMen = [[x1,y1,x2,y2]];
+				var trendline = mar_plot.selectAll(".trendline")
+				var sel = trendline.data(trendDataMen).enter();
+				sel.append("line").attr("class","trendline").attr("id","menTrendline").attr("x1",function(d) { return xScale(d[0]); }).attr("y1",function(d) { return yScale(d[1]); }).attr("x2",function(d) { return xScale(d[2]); }).attr("y2",function(d) { return yScale(d[3]); }).attr("stroke","black").attr("stroke-width",1).style("stroke-dasharray", ("3, 3"));
+
+				// for women times
+				var xLabels = dataset.map(function (d) { 
+					if (+d.time_women > 0) {
+						return d.date;
+					} else {
+						return null;
+					}
+				}).filter(x => x != null);
+				var xSeries = d3.range(1, xLabels.length+1);
+				var ySeries = dataset.map(function(d) { return +d.time_women; }).filter(y => y > 0);
+				var leastSquaresCoeff = leastSquares(xSeries,ySeries);
+				// apply the reults of the least squares regression
+				var x1 = xLabels[0];
+				var y1 = leastSquaresCoeff[0] + leastSquaresCoeff[1];
+				var x2 = xLabels[xLabels.length - 1];
+				var y2 = leastSquaresCoeff[0] * xSeries[xSeries.length-1] + leastSquaresCoeff[1];
+				var trendDataWomen = [[x1,y1,x2,y2]];
+				var sel = trendline.data(trendDataWomen).enter();
+				sel.append("line").attr("class","trendline").attr("id","womenTrendline").attr("x1",function(d) { return xScale(d[0]); }).attr("y1",function(d) { return yScale(d[1]); }).attr("x2",function(d) { return xScale(d[2]); }).attr("y2",function(d) { return yScale(d[3]); }).attr("stroke","black").attr("stroke-width",1).style("stroke-dasharray", ("3, 3"));
+
+				// add legends to plot
+				var color = d3.scaleOrdinal().domain(["Men","Women"]).range(["blue","red"]);
+				var legendRectSize = 15;
+				var legendSpacing = 5;
+				var legend = mar_plot.append("g").attr('id','legendContainer').selectAll("g").data(color.domain()).enter().append('g').attr('class','legend').attr('transform',function(d,i) {
+					var height = legendRectSize;
+					var x = w_2-padding*2.5;
+					var y = i * height+padding;
+					return 'translate('+x+','+y+')';
+				});
+				
+				legend.append('rect').attr('width',legendRectSize).attr('height',legendRectSize).style('fill',color).style('stroke',color);
+				legend.append('text').attr('x',legendRectSize+legendSpacing).attr('y',legendRectSize-legendSpacing).text(function(d) { return d; });
+
+				// the following are event listeners to update plot on click
+	        	d3.select("a[id=all]").on("click",function() {
+	        		d3.select("div[id=button_pl]").selectAll("a").classed("active",false).style("color","black");
+	        		d3.select(this).classed("active",true).style("color","white");
+	        		addToPlot(mar_plot,dataset,'all',xScale,yScale,w_2,h_2,padding,trendDataMen,trendDataWomen);
+	        		return false;
+	        	});
+	        	d3.select("a[id=men]").on("click",function() {
+	        		d3.select("div[id=button_pl]").selectAll("a").classed("active",false).style("color","black");
+	        		d3.select(this).classed("active",true).style("color","white");
+	        		addToPlot(mar_plot,dataset,'men',menXScale,menYScale,w_2,h_2,padding,trendDataMen,trendDataWomen);
+	        		return false;
+	        	});
+	        	d3.select("a[id=women]").on("click",function() {
+	        		d3.select("div[id=button_pl]").selectAll("a").classed("active",false).style("color","black");
+	        		d3.select(this).classed("active",true).style("color","white");
+	        		addToPlot(mar_plot,dataset,'women',womenXScale,womenYScale,w_2,h_2,padding,trendDataMen,trendDataWomen);
+	        		return false;
+	        	});
+            });
+
+            // returns slope, intercept and r-square of the line
+			function leastSquares(xSeries, ySeries) {
+				var reduceSumFunc = function(prev, cur) { return prev + cur; };
+				
+				var xBar = xSeries.reduce(reduceSumFunc) * 1.0 / xSeries.length;
+				var yBar = ySeries.reduce(reduceSumFunc) * 1.0 / ySeries.length;
+
+				var ssXX = xSeries.map(function(d) { return Math.pow(d - xBar, 2); })
+					.reduce(reduceSumFunc);
+				
+				var ssYY = ySeries.map(function(d) { return Math.pow(d - yBar, 2); })
+					.reduce(reduceSumFunc);
+					
+				var ssXY = xSeries.map(function(d, i) { return (d - xBar) * (ySeries[i] - yBar); })
+					.reduce(reduceSumFunc);
+					
+				var slope = ssXY / ssXX;
+				var intercept = yBar - (xBar * slope);
+				var rSquare = Math.pow(ssXY, 2) / (ssXX * ssYY);
+				
+				return [slope,intercept,rSquare];
+			}
+
+			function addToPlot(plot,dataset,prop,xscale,yscale,w,h,padding,trendDataMen,trendDataWomen) {
+        		// axis
+        		var xaxis = d3.axisBottom().scale(xscale);
+            	var yaxis = d3.axisLeft().scale(yscale);
+
+            	// add axis to plot
+            	plot.select(".x.axis").transition().duration(500).call(xaxis);
+                plot.select(".y.axis").transition().duration(500).call(yaxis);
+
+        		// update plot
+        		var graph = d3.select("g[id=scatter]");
+        		//pathD.remove();
+        		if (prop == "all") {
+        			graph.selectAll("path").filter(".men").classed("hidden",false).transition().duration(500).attr('transform',function(d) { return 'translate('+xscale(d.date)+','+yscale(d.time_men)+')'; });
+        			graph.selectAll("circle").filter(".men").classed("hidden",false).attr("cx",function(d) { return xscale(d.date); }).attr("cy",function(d) { return yscale(d.time_men); }).style("fill","transparent").on("mouseover", function(d) {
+	                	//Get this bar's x/y values, then augment for the tooltip
+						var xPosition = xscale(d.date)+(w_2)/2-padding*1.5;
+						var yPosition = yscale(d.time_men)+h_2+padding;
+						//Update the tooltip position and value
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#year").text(d.year);
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#time").text(d.time_men);
+						//Show the tooltip
+						d3.select("#tooltip").classed("hidden", false);
+					}).on("mouseout",function(d) {
+						d3.select("#tooltip").classed("hidden", true);
+					});
+					graph.selectAll("path").filter(".women").classed("hidden",false).transition().duration(500).attr('transform',function(d) { return 'translate('+xscale(d.date)+','+yscale(d.time_women)+')'; });
+        			graph.selectAll("circle").filter(".women").classed("hidden",false).attr("cx",function(d) { return xscale(d.date); }).attr("cy",function(d) { return yscale(d.time_women); }).style("fill","transparent").on("mouseover", function(d) {
+	                	//Get this bar's x/y values, then augment for the tooltip
+						var xPosition = xscale(d.date)+(w_2)/2-padding*1.5;
+						var yPosition = yscale(d.time_women)+h_2+padding;
+						//Update the tooltip position and value
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#year").text(d.year);
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#time").text(d.time_women);
+						//Show the tooltip
+						d3.select("#tooltip").classed("hidden", false);
+					}).on("mouseout",function(d) {
+						d3.select("#tooltip").classed("hidden", true);
+					});
+					plot.select("line[id=menTrendline]").classed("hidden",false).transition().duration(500).attr("x1",function(d) { return xscale(d[0]); }).attr("y1",function(d) { return yscale(d[1]); }).attr("x2",function(d) { return xscale(d[2]); }).attr("y2",function(d) { return yscale(d[3]); });
+					plot.select("line[id=womenTrendline]").classed("hidden",false).transition().duration(500).attr("x1",function(d) { return xscale(d[0]); }).attr("y1",function(d) { return yscale(d[1]); }).attr("x2",function(d) { return xscale(d[2]); }).attr("y2",function(d) { return yscale(d[3]); });
+				} 
+				else if (prop == "men") {
+					graph.selectAll("path").filter(".men").classed("hidden",false).transition().duration(500).attr('transform',function(d) { return 'translate('+xscale(d.date)+','+yscale(d.time_men)+')'; });
+        			graph.selectAll("circle").filter(".men").classed("hidden",false).attr("cx",function(d) { return xscale(d.date); }).attr("cy",function(d) { return yscale(d.time_men); }).style("fill","transparent").on("mouseover", function(d) {
+	                	//Get this bar's x/y values, then augment for the tooltip
+						var xPosition = xscale(d.date)+(w_2)/2-padding*1.5;
+						var yPosition = yscale(d.time_men)+h_2+padding;
+						//Update the tooltip position and value
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#year").text(d.year);
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#time").text(d.time_men);
+						//Show the tooltip
+						d3.select("#tooltip").classed("hidden", false);
+					}).on("mouseout",function(d) {
+						d3.select("#tooltip").classed("hidden", true);
+					});
+					plot.select("line[id=menTrendline]").classed("hidden",false).transition().duration(500).attr("x1",function(d) { return xscale(d[0]); }).attr("y1",function(d) { return yscale(d[1]); }).attr("x2",function(d) { return xscale(d[2]); }).attr("y2",function(d) { return yscale(d[3]); });
+					graph.selectAll("path").filter(".women").classed("hidden",true);
+        			graph.selectAll("circle").filter(".women").classed("hidden",true);
+        			plot.select("line[id=womenTrendline]").classed("hidden",true);
+				}
+				else {
+					graph.selectAll("path").filter(".women").classed("hidden",false).transition().duration(500).attr('transform',function(d) { return 'translate('+xscale(d.date)+','+yscale(d.time_women)+')'; });
+        			graph.selectAll("circle").filter(".women").classed("hidden",false).attr("cx",function(d) { return xscale(d.date); }).attr("cy",function(d) { return yscale(d.time_women); }).style("fill","transparent").on("mouseover", function(d) {
+	                	//Get this bar's x/y values, then augment for the tooltip
+						var xPosition = xscale(d.date)+(w_2)/2-padding*1.5;
+						var yPosition = yscale(d.time_women)+h_2+padding;
+						//Update the tooltip position and value
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#year").text(d.year);
+						d3.select("#tooltip").style("left",xPosition+"px").style("top",yPosition+"px").select("#time").text(d.time_women);
+						//Show the tooltip
+						d3.select("#tooltip").classed("hidden", false);
+					}).on("mouseout",function(d) {
+						d3.select("#tooltip").classed("hidden", true);
+					});
+					plot.select("line[id=womenTrendline]").classed("hidden",false).transition().duration(500).attr("x1",function(d) { return xscale(d[0]); }).attr("y1",function(d) { return yscale(d[1]); }).attr("x2",function(d) { return xscale(d[2]); }).attr("y2",function(d) { return yscale(d[3]); });
+					graph.selectAll("path").filter(".men").classed("hidden",true);
+        			graph.selectAll("circle").filter(".men").classed("hidden",true);
+        			plot.select("line[id=menTrendline]").classed("hidden",true);
+				}
+        	}
+        </script>
+    </body>
+</html>

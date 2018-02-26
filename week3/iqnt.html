@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>02806 Social Data Analysis and Visualization</title>
-        <script src="https://d3js.org/d3.v3.js"></script>
+        <script src="https://d3js.org/d3.v4.js"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
@@ -60,19 +60,13 @@
         <script type="text/javascript">
         	function addToBar(bar,data,prop,propScale,xScale,w,h,padding,color) {
         		// axis
-            	var yAxis = d3.svg.axis().scale(propScale).orient("left").ticks(5);
+            	var yAxis = d3.axisLeft().scale(propScale).ticks(5);
 
             	// add axis to plot
                 bar.select(".y.axis").transition().duration(1000).call(yAxis);
 
         		// add bars to plot
-                bar.selectAll("rect").data(data).transition().duration(1000).attr({
-                	x: function(d,i) { return xScale(i); },
-                	y: function(d) { return propScale(d[prop]); },
-                	width: xScale.rangeBand(),
-                	height: function(d) { return h-propScale(d[prop])-padding; },
-                	fill: function(d) { return color; }
-                });
+                bar.selectAll("rect").data(data).transition().duration(1000).attr("x",function(d,i) { return xScale(i); }).attr("y",function(d) { return propScale(d[prop]); }).attr("width",xScale.bandwidth()).attr("height",function(d) { return h-propScale(d[prop])-padding; }).attr("fill",function(d) { return color; });
         	}
 
         	// settings for window
@@ -81,10 +75,7 @@
         	var padding = 50;
 
         	// create window for plot
-            var bar = d3.select("div[id=bar]").append("svg").attr({
-            	width: w,
-            	height: h
-            });
+            var bar = d3.select("div[id=bar]").append("svg").attr("width",w).attr("height",h);
 
             // load data
             d3.csv("green_market_processed.csv",function(error,dataset) {
@@ -102,24 +93,18 @@
             	}
 
             	// scales
-            	var xScale = d3.scale.ordinal().domain(d3.range(dataset.length)).rangeRoundBands([padding,w-padding*3],0.05);
-            	var FHScale = d3.scale.linear().domain([0,maxFH]).range([h-padding,padding]);
-            	var FSScale = d3.scale.linear().domain([0,maxFS]).range([h-padding,padding]);
-            	var VHScale = d3.scale.linear().domain([0,maxVH]).range([h-padding,padding]);
-            	var VSScale = d3.scale.linear().domain([0,maxVS]).range([h-padding,padding]);
+            	var xScale = d3.scaleBand().domain(d3.range(dataset.length)).rangeRound([padding,w-padding*3]).paddingInner(0.05);
+            	var FHScale = d3.scaleLinear().domain([0,maxFH]).range([h-padding,padding]);
+            	var FSScale = d3.scaleLinear().domain([0,maxFS]).range([h-padding,padding]);
+            	var VHScale = d3.scaleLinear().domain([0,maxVH]).range([h-padding,padding]);
+            	var VSScale = d3.scaleLinear().domain([0,maxVS]).range([h-padding,padding]);
 
             	// axis
-            	var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickValues(d3.range(dataset.length)).tickFormat(function(d,i) { return dataset[i].month;})
-            	var yAxis = d3.svg.axis().scale(FHScale).orient("left").ticks(5);
+            	var xAxis = d3.axisBottom().scale(xScale).tickValues(d3.range(dataset.length)).tickFormat(function(d,i) { return dataset[i].month;})
+            	var yAxis = d3.axisLeft().scale(FHScale).ticks(5);
 
             	// add bars to plot
-                bar.selectAll("rect").data(dataset).enter().append("rect").attr({
-                	x: function(d,i) { return xScale(i); },
-                	y: function(d) { return FHScale(d.Fruits_Harvest); },
-                	width: xScale.rangeBand(),
-                	height: function(d) { return h-FHScale(d.Fruits_Harvest)-padding; },
-                	fill: function(d) { return 'red'; }
-                });
+                bar.selectAll("rect").data(dataset).enter().append("rect").attr("x",function(d,i) { return xScale(i); }).attr("y",function(d) { return FHScale(d.Fruits_Harvest); }).attr("width",xScale.bandwidth()).attr("height",function(d) { return h-FHScale(d.Fruits_Harvest)-padding; }).attr("fill",function(d) { return 'red'; });
 
                 // add axis to plot
             	bar.append("g").attr("class","x axis").attr("transform","translate(0,"+(h-padding)+")").call(xAxis);
