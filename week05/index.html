@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>02806 Social Data Analysis and Visualization</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        <style>
+        	h1 {
+        		font-family: Georgia;
+        	}
+        	p {
+        		font-family: Georgia;
+        		font-size: 14px;
+        		line-height: 1.6em;
+        	}
+            .white-text {
+                fill: white;
+            }
+            .line {
+                fill: none;
+                stroke: red;
+                stroke-width: 2;
+            }
+            .axis path,
+            .axis line {
+            	fill: none;
+            	stroke: black;
+            }
+            .axis text {
+            	font-family: sans-serif;
+            	font-size: 11px;
+            	fill: olive;
+            }
+            #tooltip {
+				position: absolute;
+				width: 150px;
+				height: auto;
+				padding: 5px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			#tooltip.hidden {
+				visibility: hidden;
+			}
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 14px;
+			}
+			path.hidden,circle.hidden,line.hidden {
+				display: none;
+			}
+        </style>
+    </head>
+    <body>
+    	<div class="container">
+	        <div id="titleHeader">
+	            <h1>02806 Social Data Analysis and Visualization</h1>
+	        </div>
+	        <div id="doughnut"></div><br><br>
+	        <div id="stacked_area"></div><br><br>
+	        <div id="network"></div>
+	    </div>
+        <script type="text/javascript">
+            function precisionRound(number, precision) {
+                var factor = Math.pow(10, precision);
+                return Math.round(number * factor) / factor;
+            }
+        </script>
+        <script type="text/javascript">
+            // settings for window
+            var w = 700;
+            var h = 700;
+            var padding = 50;
+
+            // create window for plot
+            var svg = d3.select("div[id=doughnut]").append("svg").attr("width",w).attr("height",h);
+            var pie = d3.pie().value(function(d) { return precisionRound(d.crime_ratio,3); });
+        	var outerRadius = w/2;
+        	var innerRadius = w/3;
+        	var arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+        	var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+            var rowConverter = function(d) {
+                return {
+                	boroughs: d.BORO_NM,
+                    crime_ratio: parseFloat(d.counts)
+                };
+            }
+
+            // load data
+            d3.csv("crime_borough.csv",rowConverter,function(error,dataset) {
+            	var arcs = svg.selectAll("g.arc").data(pie(dataset)).enter().append("g").attr("class","arc").attr("transform","translate("+outerRadius+","+outerRadius+")");
+            	arcs.append("path").attr("fill",function(d,i) { return color(i); }).attr("d",arc);
+                arcs.append("text").attr("class","white-text").attr("transform", function(d) { return "translate("+arc.centroid(d)+")"; }).attr("text-anchor", "middle").text(function(d,i) { return d.value+" "+dataset[i].boroughs; });
+            });
+        </script>
+        <script type="text/javascript">
+            var w2 = 900;
+            var h2 = 500;
+            var padding = 50;
+
+            var svg2 = d3.select("div[id=stacked_area]").append("svg").attr("width",w2).attr("height",h2);
+            var stack = d3.stack().keys(["AGGRAVATED HARASSMENT","ASSAULT","HARASSMENT","LARCENY","MARIJUANA"]).order(d3.stackOrderDescending);
+
+            //var formatTime = d3.utcParse("%m/%d/%Y");
+            var colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+            // load data
+            d3.json("crime_manhattan.json",function(error,dataset) {
+                //console.table(dataset);
+                for (var i=0; i<dataset.length; i++) {
+                	dataset[i].date = new Date(2016,dataset[i].month,1);
+                }
+
+                // scales
+                var xScale = d3.scaleBand().domain(d3.range(dataset.length)).range([0,w2-padding*6]).paddingInner(0.05);
+				var yScale = d3.scaleLinear().domain([
+					0,				
+					d3.max(dataset,function(d) { return d["AGGRAVATED HARASSMENT"] + d.ASSAULT + d.HARASSMENT + d.LARCENY + d.MARIJUANA; })
+				]).range([h2,padding]);
+
+                var series = stack(dataset);
+
+                // Add a group for each row of data
+                var groups = svg2.selectAll("g").data(series).enter().append("g").style("fill",function(d,i) { return colors(i); });
+
+                // add legends to plot
+                var color = d3.scaleOrdinal().domain(["AGGRAVATED HARASSMENT","ASSAULT","HARASSMENT","LARCENY","MARIJUANA"]).range(d3.schemeCategory10);
+				var legendRectSize = 15;
+				var legendSpacing = 5;
+				var legend = svg2.append("g").attr('id','legendContainer').selectAll("g").data(color.domain()).enter().append('g').attr('class','legend').attr('transform',function(d,i) {
+					var height = legendRectSize;
+					var x = w2-padding*5.5;
+					var y = i * height + 10;
+					return 'translate('+x+','+y+')';
+				});
+				legend.append('rect').attr('width',legendRectSize).attr('height',legendRectSize).style('fill',color).style('stroke',color);
+				legend.append('text').attr('x',legendRectSize+legendSpacing).attr('y',legendRectSize-legendSpacing).text(function(d) { return d; });
+
+                // Add a rect for each data value
+                var rects = groups.selectAll("rect").data(function(d) { return d; }).enter()
+                .append("rect").attr("x",function(d,i) { return xScale(i); })
+                .attr("y",function(d) { return yScale(d[1]); })
+                .attr("height",function(d) { return yScale(d[0]) - yScale(d[1]); })
+                .attr("width",xScale.bandwidth());
+                groups.append("title").text(function(d) { return "Group: "+d.key; })
+            });
+        </script>
+        <script type="text/javascript">
+        	var dataset = {
+        		nodes: [
+        		{name:"Manhattan"},
+        		{name:"Brooklyn"},
+        		{name:"Queens"},
+        		{name:"TheBronx"},
+        		{name:"StatenIsland"}
+        		], edges: [
+        		{source:0, target:1},
+        		{source:0, target:2},
+        		{source:0, target:3},
+        		{source:0, target:4},
+        		{source:1, target:3},
+        		{source:2, target:3},
+        		{source:2, target:4},
+        		{source:3, target:4}
+        		]};
+
+        	var w3 = 400;
+        	var h3 = 400;
+
+        	var svg3 = d3.select("div[id=network]").append("svg").attr("width",w3).attr("height",h3);
+
+        	var force = d3.forceSimulation(dataset.nodes)
+        	.force("charge",d3.forceManyBody().strength(-30)) // strength -30 is default
+        	.force("link",d3.forceLink(dataset.edges).distance(50)) // distance 30 is default
+        	.force("center",d3.forceCenter().x(w3/2).y(h3/2));
+
+        	var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        	//Create edges as lines
+        	var edges = svg3.selectAll("line").data(dataset.edges).enter()
+        	.append("line").style("stroke","#ccc").style("stroke-width",1);
+
+        	//Create nodes as circles
+        	var nodes = svg3.selectAll("circle").data(dataset.nodes).enter()
+        	.append("circle").attr("r",10).style("fill",function(d,i) { return color(i); })
+        	.call(d3.drag() //Define what to do on drag events
+        	.on("start", dragStarted)
+        	.on("drag", dragging)
+        	.on("end", dragEnded));
+        	
+        	//Add a simple tooltip
+        	nodes.append("title").text(function(d) {return d.name; });
+
+        	//Every time the simulation "ticks", this will be called
+        	force.on("tick",function() {
+        		edges.attr("x1",function(d) { return d.source.x; })
+        		.attr("y1",function(d) { return d.source.y; })
+        		.attr("x2",function(d) { return d.target.x; })
+        		.attr("y2",function(d) { return d.target.y; });
+
+        		nodes.attr("cx",function(d) { return d.x; })
+        		.attr("cy",function(d) { return d.y; });
+        	});
+        	//Define drag event functions
+			function dragStarted(d) {
+				if (!d3.event.active) {
+					force.alphaTarget(0.3).restart();
+				}
+				d.fx = d.x;
+				d.fy = d.y;
+			}
+			function dragging(d) {
+				d.fx = d3.event.x;
+				d.fy = d3.event.y;
+			}
+			function dragEnded(d) {
+				if (!d3.event.active) {
+					force.alphaTarget(0);
+				}
+				d.fx = null;
+				d.fy = null;
+			}
+        </script>
+    </body>
+</html>
