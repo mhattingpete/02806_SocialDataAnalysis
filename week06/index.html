@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>02806 Social Data Analysis and Visualization</title>
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        <style>
+        	h1 {
+        		font-family: Georgia;
+        	}
+        	p {
+        		font-family: Georgia;
+        		font-size: 14px;
+        		line-height: 1.6em;
+        	}
+            .white-text {
+                fill: white;
+            }
+            .line {
+                fill: none;
+                stroke: red;
+                stroke-width: 2;
+            }
+            .axis path,
+            .axis line {
+            	fill: none;
+            	stroke: black;
+            }
+            .axis text {
+            	font-family: sans-serif;
+            	font-size: 11px;
+            	fill: olive;
+            }
+            #tooltip {
+				position: absolute;
+				width: 150px;
+				height: auto;
+				padding: 5px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
+				box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
+				pointer-events: none;
+			}
+			#tooltip.hidden {
+				visibility: hidden;
+			}
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 14px;
+			}
+			path.hidden,circle.hidden,line.hidden {
+				display: none;
+			}
+            .pan rect {
+                fill: black;
+                opacity: 0.2;
+            }
+            .pan text {
+                fill: black;
+                font-size: 18px;
+                text-anchor: middle;
+            }
+            .pan:hover rect,
+            .pan:hover text {
+                fill: blue;
+            }
+        </style>
+    </head>
+    <body>
+    	<div class="container">
+	        <div id="titleHeader">
+	            <h1>02806 Social Data Analysis and Visualization</h1>
+	        </div>
+	        <div id="map_container"></div><br><br>
+            <div id="interactive_map_container"></div>
+	    </div>
+        <script type="text/javascript">
+            function precisionRound(number,precision) {
+                var factor = Math.pow(10,precision);
+                return Math.round(number * factor) / factor;
+            }
+        </script>
+        <script type="text/javascript">
+            // settings for window
+            var w = 700;
+            var h = 700;
+
+            // create window for plot
+            var svg = d3.select("div[id=map_container]").append("svg").attr("width",w).attr("height",h);
+            //Define path generator,using the Albers USA projection
+            var projection = d3.geoAlbersUsa().translate([0,0]);
+            var path = d3.geoPath().projection(projection);
+        	var color = d3.scaleQuantize().range(["rgb(237,248,233)","rgb(186,228,179)","rgb(116,196,118)","rgb(49,163,84)","rgb(0,109,44)"]);
+            //Number formatting for population values
+            var formatAsThousands = d3.format(",");  //e.g. converts 123456 to "123,456"
+            //Define what to do when dragging
+            var zooming = function(d) {
+                //Log out d3.event, so you can see all the goodies inside
+                //console.log(d3.event);
+                //Get the current (pre-dragging) translation offset
+                var offset = [d3.event.transform.x, d3.event.transform.y];
+                //Calculate new scale
+                var newScale = d3.event.transform.k * 2000;
+                //Update projection with new offset and scale
+                projection.translate(offset).scale(newScale);
+                //Update all paths and circles
+                svg.selectAll("path")
+                    .attr("d",path);
+                svg.selectAll("circle")
+                    .attr("cx",function(d) {
+                        return projection([d.lon,d.lat])[0];
+                    })
+                    .attr("cy",function(d) {
+                        return projection([d.lon,d.lat])[1];
+                    });
+            }
+            //Then define the zoom behavior
+            var zoom = d3.zoom().scaleExtent([0.2,2.0]).translateExtent([[-1200,-700],[1200,700]]).on("zoom",zooming);
+            //The center of the country, roughly
+            var center = projection([-97.0,39.0]);
+            //Create a container in which all pan-able elements will live
+            var map = svg.append("g").attr("id","map").call(zoom).call(zoom.transform,d3.zoomIdentity //Then apply the initial transform
+                .translate(w/2,h/2).scale(0.25).translate(-center[0],-center[1]));
+            //Create a new, invisible background rect to catch drag events
+            map.append("rect").attr("x",0).attr("y",0).attr("width",w).attr("height",h).attr("opacity",0);
+            //Then define the drag behavior
+            //var drag = d3.drag().on("drag",dragging);
+
+            //Load in agriculture data
+            d3.csv("us-ag-productivity.csv",function(data) {
+                //Set input domain for color scale
+                color.domain([
+                    d3.min(data,function(d) { return d.value; }),
+                    d3.max(data,function(d) { return d.value; })
+                ]);
+                //Load in GeoJSON data
+                d3.json("us-states.json",function(json) {
+                    //Merge the ag. data and GeoJSON
+                    //Loop through once for each ag. data value
+                    for (var i = 0; i < data.length; i++) {
+                        //Grab state name
+                        var dataState = data[i].state;
+                        //Grab data value,and convert from string to float
+                        var dataValue = parseFloat(data[i].value);
+                        //Find the corresponding state inside the GeoJSON
+                        for (var j = 0; j < json.features.length; j++) {
+                            var jsonState = json.features[j].properties.name;
+                            if (dataState == jsonState) {
+                                //Copy the data value into the JSON
+                                json.features[j].properties.value = dataValue;
+                                //Stop looking through the JSON
+                                break;   
+                            }
+                        }       
+                    }
+                    //Bind data and create one path per GeoJSON feature
+                    map.selectAll("path").data(json.features).enter().append("path").attr("d",path).style("fill",function(d) {
+                        //Get data value
+                        var value = d.properties.value;        
+                        if (value) {
+                            //If value exists…
+                            return color(value);
+                        } else {
+                            //If value is undefined…
+                            return "#ccc";
+                        }
+                    });
+                    //Load in cities data
+                    d3.csv("us-cities.csv",function(data) {
+                        map.selectAll("circle")
+                           .data(data)
+                           .enter()
+                           .append("circle")
+                           .attr("cx",function(d) {
+                               return projection([d.lon,d.lat])[0];
+                           })
+                           .attr("cy",function(d) {
+                               return projection([d.lon,d.lat])[1];
+                           })
+                           .attr("r",function(d) {return Math.sqrt(parseInt(d.population) * 0.00004); })
+                           .style("fill","yellow")
+                           .style("stroke","gray")
+                           .style("stroke-width",0.25)
+                           .style("opacity",0.75)
+                           .append("title")         //Simple tooltip
+                           .text(function(d) {
+                                return d.place+": Pop. " + formatAsThousands(d.population);
+                           });
+                        //createPanButtons();       
+                    });
+                });
+            });
+            var createPanButtons = function() {
+                //Create the clickable groups
+                //North
+                var north = svg.append("g")
+                    .attr("class","pan")   //All share the 'pan' class
+                    .attr("id","north");   //The ID will tell us which direction to head
+                north.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",w)
+                    .attr("height",30);
+                north.append("text")
+                    .attr("x",w/2)
+                    .attr("y",20)
+                    .html("&uarr;");
+
+                //South
+                var south = svg.append("g")
+                    .attr("class","pan")
+                    .attr("id","south");
+                south.append("rect")
+                    .attr("x",0)
+                    .attr("y",h-30)
+                    .attr("width",w)
+                    .attr("height",30);
+                south.append("text")
+                    .attr("x",w/2)
+                    .attr("y",h - 10)
+                    .html("&darr;");
+                //West
+                var west = svg.append("g")
+                    .attr("class","pan")
+                    .attr("id","west");
+                west.append("rect")
+                    .attr("x",0)
+                    .attr("y",30)
+                    .attr("width",30)
+                    .attr("height",h - 60);
+                west.append("text")
+                    .attr("x",15)
+                    .attr("y",h/2)
+                    .html("&larr;");
+                //East
+                var east = svg.append("g")
+                    .attr("class","pan")
+                    .attr("id","east");
+                east.append("rect")
+                    .attr("x",w - 30)
+                    .attr("y",30)
+                    .attr("width",30)
+                    .attr("height",h - 60);
+                east.append("text")
+                    .attr("x",w - 15)
+                    .attr("y",h/2)
+                    .html("&rarr;");
+                //Panning interaction
+                d3.selectAll(".pan")
+                    .on("click",function() {  
+                        //Get current translation offset
+                        var offset = projection.translate();
+                        //Set how much to move on each click
+                        var moveAmount = 50;
+                        
+                        //Which way are we headed?
+                        var direction = d3.select(this).attr("id");
+                        //Modify the offset,depending on the direction
+                        switch (direction) {
+                            case "north":
+                                offset[1] += moveAmount;  //Increase y offset
+                                break;
+                            case "south":
+                                offset[1] -= moveAmount;  //Decrease y offset
+                                break;
+                            case "west":
+                                offset[0] += moveAmount;  //Increase x offset
+                                break;
+                            case "east":
+                                offset[0] -= moveAmount;  //Decrease x offset
+                                break;
+                            default:
+                                break;
+                        }
+                        //Update projection with new offset
+                        projection.translate(offset);
+                        //Update all paths and circles
+                        svg.selectAll("path").transition()
+                            .attr("d",path);
+                        svg.selectAll("circle").transition()
+                            .attr("cx",function(d) {
+                                return projection([d.lon,d.lat])[0];
+                            })
+                            .attr("cy",function(d) {
+                                return projection([d.lon,d.lat])[1];
+                        });
+                    });
+                };
+        </script>
+    </body>
+</html>

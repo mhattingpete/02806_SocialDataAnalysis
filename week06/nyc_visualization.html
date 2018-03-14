@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>02806 Social Data Analysis and Visualization</title>
+		<script src="https://d3js.org/d3.v4.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+		<style>
+			h1 {
+				font-family: Georgia;
+			}
+			text {
+            	font-family: sans-serif;
+            	fill: #000000;
+        	}
+        	tr:nth-child(even) {
+            	background-color: #d9d9d9;
+        	}
+			.brushed {
+				fill: #ff3399;
+				stroke: #8e1b54;
+				opacity: 1.0;
+			}
+			.non_brushed {
+				fill: darkblue;
+				opacity: 0.5;
+				stroke: gray;
+				stroke-width: 0.25;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div id="titleHeader">
+					<h1>02806 Social Data Analysis and Visualization</h1>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6" id="map_container"></div>
+				<div class="col-sm-6" id="bar"></div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			// settings for window
+			var w = 600;
+			var h = 600;
+			var padding = 50;
+
+			var svg = d3.select("div[id=map_container]").append("svg").attr("width",w).attr("height",h);
+			var formatTime = d3.format("");
+			var projection = d3.geoMercator().translate([w/2-50,h/2]).scale(45000).center([-74.0,40.7]);
+			var path = d3.geoPath().projection(projection);
+			var color = d3.scaleQuantize().range(["rgb(66,134,244)","rgb(227,175,255)","rgb(142,121,181)","rgb(155,188,255)","rgb(147,160,188)"]);
+			var map = svg.append("g").attr("id","map");
+			var bar = d3.select("div[id=bar]").append("svg").attr("width",w).attr("height",h);
+			var xScale = d3.scaleBand().domain([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]).rangeRound([padding,w-padding]).paddingInner(0.05);
+			var dataset = {0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0,21:0,22:0,23:0};
+
+			var rowConverter = function(d) {
+				return {
+					BoroName: d.BORO_NM,
+					time: +d.CMPLNT_FR_TM,
+					lat: parseFloat(d.Latitude),
+					lon: parseFloat(d.Longitude)
+				};
+			}
+
+			d3.json("boroughs.geojson",function(json) {
+				color.domain([1,5]);
+				map.selectAll("path").data(json.features).enter().append("text").attr("class","white-text").attr("transform", function(d) { return "translate("+d.geometry.coordinates[0][0][0]+")"; }).attr("text-anchor","middle").text(function(d,i) { return d.properties.BoroName; });
+				map.selectAll("path").data(json.features).enter().append("path").attr("d",path).style("fill",function(d) {
+					//Get data value
+					var value = d.properties.BoroCode;
+					if (value) {
+						//If value exists…
+						return color(value);
+					} else {
+						//If value is undefined…
+						return "#ccc";
+					}
+				});
+				//Load in cities data
+				d3.csv("murder_borough.csv",rowConverter,function(data) {
+					var circles = map.selectAll("circle")
+					   .data(data)
+					   .enter()
+					   .append("circle")
+					   .attr("cx",function(d) {
+						   return projection([d.lon,d.lat])[0];
+					   })
+					   .attr("cy",function(d) {
+						   return projection([d.lon,d.lat])[1];
+					   })
+					   .attr("r",4)
+					   .attr("class","non_brushed");
+					function highlightBrushedCircles() {
+						if (d3.event.selection != null) {
+							// revert circles to initial style
+							circles.attr("class","non_brushed");
+							var brush_coords = d3.brushSelection(this);
+							// style brushed circles
+							circles.filter(function (){
+								var cx = d3.select(this).attr("cx"),
+								cy = d3.select(this).attr("cy");
+								return isBrushed(brush_coords, cx, cy);
+							}).attr("class", "brushed");
+						}
+					}
+					function displayBars() {
+						// disregard brushes w/o selections  
+						if (!d3.event.selection) return;
+						// programmed clearing of brush after mouse-up
+						d3.select(this).call(brush.move,null);
+						var d_brushed =  d3.selectAll(".brushed").data();
+						// populate barchart if one or more elements is brushed						
+						if (d_brushed.length > 0) {
+							clearBars();
+							dataset = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+							for (var i=0;i<d_brushed.length;i++) {
+								dataset[d_brushed[i].time] += 1;
+							}
+							var yScale = d3.scaleLinear().domain([0,d3.max(dataset)]).range([h-padding,padding]);
+							
+							// axis
+            				var xAxis = d3.axisBottom().scale(xScale);
+            				var yAxis = d3.axisLeft().scale(yScale);
+            				// add bars to plot
+                			bar.selectAll("rect").data(dataset).enter().append("rect").attr("x",function(d,i) { return xScale(i); }).attr("y",function(d) { return yScale(d); }).attr("width",xScale.bandwidth()).attr("height",function(d) { return h-yScale(d)-padding; }).attr("fill",function(d) { return "steelblue"; });
+                			// add axis to plot
+			            	bar.append("g").attr("class","x axis").attr("transform","translate(0,"+(h-padding)+")").call(xAxis);
+			            	bar.append("g").attr("class","y axis").attr("transform","translate("+padding+",0)").call(yAxis);
+						} else {
+							clearBars();
+						}
+					}
+					var brush = d3.brush().on("brush",highlightBrushedCircles).on("end",displayBars);
+					svg.append("g").call(brush);
+				});
+			});
+			function clearBars() {
+				bar.selectAll("g").remove();
+				bar.selectAll("rect").remove();
+			}
+
+			function isBrushed(brush_coords,cx,cy) {
+				 var x0 = brush_coords[0][0],
+					 x1 = brush_coords[1][0],
+					 y0 = brush_coords[0][1],
+					 y1 = brush_coords[1][1];
+				return x0 <= cx && cx <= x1 && y0 <= cy && cy <= y1;
+			}
+		</script>
+	</body>
+</html>
+
