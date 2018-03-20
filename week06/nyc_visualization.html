@@ -51,7 +51,6 @@
 			var padding = 50;
 
 			var svg = d3.select("div[id=map_container]").append("svg").attr("width",w).attr("height",h);
-			var formatTime = d3.format("");
 			var projection = d3.geoMercator().translate([w/2-50,h/2]).scale(45000).center([-74.0,40.7]);
 			var path = d3.geoPath().projection(projection);
 			var color = d3.scaleQuantize().range(["rgb(66,134,244)","rgb(227,175,255)","rgb(142,121,181)","rgb(155,188,255)","rgb(147,160,188)"]);
