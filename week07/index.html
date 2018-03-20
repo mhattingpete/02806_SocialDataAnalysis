@@ -151,6 +151,10 @@
 				});
 				//Load in cities data
 				d3.csv("all_murder.csv",rowConverter,function(data) {
+					data = data.filter(function(d) {
+						return !isNaN(d.lat) && !isNaN(d.lon) && d.BoroName != "";
+					});
+					//data.filter(lon => lon != null);
 					var nested_data = d3.nest().key(function(d) { return d.date; }).entries(data);
 					nested_data.sort(function(a,b) {
 						return d3.descending(a.values[0].date, b.values[0].date);
