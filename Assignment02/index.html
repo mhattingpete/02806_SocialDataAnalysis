@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Theme Made By www.w3schools.com - No Copyright -->
+		<title>02806 Social Data Analysis and Visualization</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://d3js.org/d3.v4.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+		<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
+		<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<style>
+			body {
+				font: 400 15px Lato, sans-serif;
+				line-height: 1.8;
+				color: #818181;
+			}
+			h2 {
+				font-size: 24px;
+				text-transform: uppercase;
+				color: #303030;
+				font-weight: 600;
+				margin-bottom: 30px;
+			}
+			h4 {
+				font-size: 19px;
+				line-height: 1.375em;
+				color: #303030;
+				font-weight: 400;
+				margin-bottom: 30px;
+			}	
+			.jumbotron {
+				background-color: #e68a00;
+				color: #fff;
+				padding: 100px 25px;
+				font-family: Montserrat, sans-serif;
+			}
+			.container-fluid {
+				padding: 60px 50px;
+			}
+			.bg-grey {
+				background-color: #f6f6f6;
+			}
+			.panel {
+				border: 1px solid #f4511e; 
+				border-radius:0 !important;
+				transition: box-shadow 0.5s;
+			}
+			.panel:hover {
+				box-shadow: 5px 0px 40px rgba(0,0,0, .2);
+			}
+			.panel-footer .btn:hover {
+				border: 1px solid #f4511e;
+				background-color: #fff !important;
+				color: #f4511e;
+			}
+			.panel-heading {
+				color: #fff !important;
+				background-color: #f4511e !important;
+				padding: 25px;
+				border-bottom: 1px solid transparent;
+				border-top-left-radius: 0px;
+				border-top-right-radius: 0px;
+				border-bottom-left-radius: 0px;
+				border-bottom-right-radius: 0px;
+			}
+			.panel-footer {
+				background-color: white !important;
+			}
+			.panel-footer h3 {
+				font-size: 32px;
+			}
+			.panel-footer h4 {
+				color: #aaa;
+				font-size: 14px;
+			}
+			.panel-footer .btn {
+				margin: 15px 0;
+				background-color: #f4511e;
+				color: #fff;
+			}
+			.navbar {
+				margin-bottom: 0;
+				background-color: #e68a00;
+				z-index: 9999;
+				border: 0;
+				font-size: 12px !important;
+				line-height: 1.42857143 !important;
+				letter-spacing: 4px;
+				border-radius: 0;
+				font-family: Montserrat, sans-serif;
+			}
+			.navbar li a, .navbar .navbar-brand {
+				color: #fff !important;
+			}
+			.navbar-nav li a:hover, .navbar-nav li.active a {
+				color: #e68a00 !important;
+				background-color: #fff !important;
+			}
+			.navbar-default .navbar-toggle {
+				border-color: transparent;
+				color: #fff !important;
+			}
+			footer .glyphicon {
+				font-size: 20px;
+				margin-bottom: 20px;
+				color: #e68a00;
+			}
+			.slideanim {visibility:hidden;}
+			.slide {
+				animation-name: slide;
+				-webkit-animation-name: slide;
+				animation-duration: 1s;
+				-webkit-animation-duration: 1s;
+				visibility: visible;
+			}
+			@keyframes slide {
+			0% {
+				opacity: 0;
+				transform: translateY(70%);
+			} 
+			100% {
+				opacity: 1;
+				transform: translateY(0%);
+			}
+			}
+			@-webkit-keyframes slide {
+			0% {
+				opacity: 0;
+				-webkit-transform: translateY(70%);
+			} 
+			100% {
+				opacity: 1;
+				-webkit-transform: translateY(0%);
+			}
+			}
+			@media screen and (max-width: 768px) {
+			.col-sm-4 {
+				text-align: center;
+				margin: 25px 0;
+			}
+			.btn-lg {
+				width: 100%;
+				margin-bottom: 35px;
+			}
+			}
+			.brushed {
+				fill: purple;
+				stroke: grey;
+				stroke-width: 0.3;
+				opacity: 1.0;
+			}
+			.non_brushed {
+				fill: grey;
+				stroke: grey;
+				stroke-width: 0.3;
+				opacity: 0.5;
+			}
+			.non_visible {
+				fill: none;
+			}
+			.line {
+				fill: none;
+				stroke: steelblue;
+				stroke-width: 2;
+			}
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: black;
+			}
+			.axis text {
+				font-family: sans-serif;
+				font-size: 11px;
+				fill: olive;
+			}
+			#tooltip {
+				position: absolute;
+				width: 150px;
+				height: auto;
+				padding: 5px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			#tooltip.hidden {
+				visibility: hidden;
+			}
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 14px;
+			}
+			path.hidden,circle.hidden,line.hidden {
+				display: none;
+			}
+			.brush .extent {
+				stroke: #fff;
+				fill-opacity: .125;
+				shape-rendering: crispEdges;
+			}
+		</style>
+	</head>
+	<body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="60">
+		<nav class="navbar navbar-default navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>												
+					</button>
+					<a class="navbar-brand" href="#myPage"></a>
+				</div>
+				<div class="collapse navbar-collapse" id="myNavbar">
+					<ul class="nav navbar-nav navbar-right">
+					<li><a href="#part1">PART 1</a></li>
+					<li><a href="#part2">PART 2</a></li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<div class="jumbotron text-center">
+			<h1 style="font-size: 32px;">02806 - Social Data Analysis and Visualization</h1> 
+			<h2 style="color: white;">Assignment 2</h2> 
+		</div>
+
+		<!-- Container (Part 1 Section) -->
+		<div id="part1" class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12 col-md-12 col-lg-12">
+					<h2>Part 1: Telling Data Stories</h2><br>
+					<ul>
+						<li><strong>What is the Oxford English Dictionary's defintion of a narrative?</strong> An account of a series of events, facts, etc., given in order and with the establishing of connections between them. In my own words a narrative is a chain of events in a certain order where each event have some connection to the others.</li>
+						<li><strong>What is your favorite visualization among the examples in section 3? Explain why in a few words.</strong> I personally prefer fig. 2 since its the simplest one and you almost need no description to understand the visualization. I think simplicity and intuitive visualizations is what makes a great visualization.</li>
+						<li><strong>What's the point of Figure 7?</strong> The figure gives an overview of the most used design strategies and methods used in 58 different visualizations. The authors use this to create an overview of what design strategies that are available and used.</li>
+						<li><strong>Use Figure 7 to find the most common design choice within each category for the Visual narrative and Narrative structure.</strong> Below the most common design choice is listed for each category.<ul>
+							<li><em>Visual Structuring:</em> Consistent Visual Platform.</li>
+							<li><em>Highlighting:</em> Feature Distinction.</li>
+							<li><em>Transition Guidance:</em> Object Continuity.</li>
+							<li><em>Ordering:</em> User Directed Path</li>
+							<li><em>Interactivity:</em> Filtering / Selection / Search.</li>
+							<li><em>Messaging:</em> Captions / Headlines.</li>
+						</ul></li>
+						<li><strong>Check out Figure 8 and section 4.3.</strong><ul>
+							<li><em>What is your favorite genre of narrative visualization? Why?</em> I personally prefer an annotated chart or a simple animation. But I prefer simple animations without to much stuff going on and a clear agenda since they are the most intuitive and therefore gets the message out.</li>
+							<li><em>What is your least favorite genre? Why?</em> My least favorite might be magazine style since those can be very messy with text all around the visualization and maybe even no clear separation of the visualization and the text.</li>
+						</ul></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- Container (Part 2 Section) -->
+		<div id="part2" class="container-fluid bg-grey">
+			<h2>Part 2: Visualizing Murders over Time</h2><br>
+			<div class="row">
+				<div class="col-sm-12 col-md-12 col-lg-12" id="timeline"></div>
+			</div>
+			<div class="row">
+				<button class="btn btn-default" id="animate">Animate</button>
+			</div>
+			<div class="row">
+				<div class="col-sm-12 col-md-12 col-lg-12" id="map_container"></div>
+			</div>
+		</div>
+
+		<!-- Container (Footer Section) -->
+		<footer class="container-fluid text-center">
+			<a href="#myPage" title="To Top">
+			<span class="glyphicon glyphicon-chevron-up"></span>
+			</a>
+			<p>Scroll to the top of the page</p>
+		</footer>
+
+		<script>
+		$(document).ready(function(){
+			// Add smooth scrolling to all links in navbar + footer link
+			$(".navbar a, footer a[href='#myPage']").on('click', function(event) {
+				// Make sure this.hash has a value before overriding default behavior
+				if (this.hash !== "") {
+					// Prevent default anchor click behavior
+					event.preventDefault();
+
+					// Store hash
+					var hash = this.hash;
+
+					// Using jQuery's animate() method to add smooth page scroll
+					// The optional number (900) specifies the number of milliseconds it takes to scroll to the specified area
+					$('html, body').animate({
+					scrollTop: $(hash).offset().top
+					}, 900, function(){
+				 
+					// Add hash (#) to URL when done scrolling (default click behavior)
+					window.location.hash = hash;
+					});
+				} // End if
+			});
+			
+			$(window).scroll(function() {
+				$(".slideanim").each(function(){
+					var pos = $(this).offset().top;
+
+					var winTop = $(window).scrollTop();
+					if (pos < winTop + 600) {
+						$(this).addClass("slide");
+					}
+				});
+			});
+		})
+		</script>
+		<script type="text/javascript">
+			// settings for window
+			var w = 600;
+			var h = 600;
+			var w2 = 1300;
+			var h2 = 250;
+			var padding = 50;
+
+			var svg = d3.select("div[id=map_container]").append("svg").attr("width",w).attr("height",h).style("transform","translate(50%,0%)");
+
+			var parseDate = d3.utcParse("%m/%d/%Y");
+
+			var projection = d3.geoMercator().translate([w/2-50,h/2]).scale(45000).center([-74.0,40.7]);
+			var path = d3.geoPath().projection(projection);
+
+			var color = d3.scaleQuantize().range(["rgb(66,134,244)","rgb(227,175,255)","rgb(142,121,181)","rgb(155,188,255)","rgb(147,160,188)"]);
+
+			var map = svg.append("g").attr("id","map").attr("class","features");
+			var labels = svg.append("g").attr("class","labels");
+
+			var plot = d3.select("div[id=timeline]").append("svg").attr("width",w2).attr("height",h2);
+			var btn = d3.select("button[id=animate]");
+
+			var rowConverter = function(d) {
+				return {
+					BoroName: d.BORO_NM,
+					time: +d.CMPLNT_FR_TM,
+					date: parseDate(d.RPT_DT),
+					lat: parseFloat(d.Latitude),
+					lon: parseFloat(d.Longitude)
+				};
+			}
+
+			d3.json("boroughs.geojson",function(json) {
+				color.domain([1,5]);
+				// add labels to plot
+				labels.selectAll(".label").data(json.features).enter().append("text").attr("class","label").attr("transform",function(d) { return "translate("+path.centroid(d)+")"; }).style("text-anchor","middle").text(function(d) { return d.properties.BoroName; });
+				// add map and colors
+				map.selectAll("path").data(json.features).enter().append("path").attr("d",path).style("fill",function(d) {
+					//Get data value
+					var value = d.properties.BoroCode;
+					if (value) {
+						//If value exists…
+						return color(value);
+					} else {
+						//If value is undefined…
+						return "#ccc";
+					}
+				});
+				//Load in cities data
+				d3.csv("all_murder.csv",rowConverter,function(data) {
+					data = data.filter(function(d) {
+						return !isNaN(d.lat) && !isNaN(d.lon) && d.BoroName != "";
+					});
+					//data.filter(lon => lon != null);
+					var nested_data = d3.nest().key(function(d) { return d.date; }).entries(data);
+					nested_data.sort(function(a,b) {
+						return d3.descending(a.values[0].date, b.values[0].date);
+					});
+					//console.table(data);
+					var xScale = d3.scaleTime().domain([d3.min(nested_data,function(d) { return d.values[0].date; }),d3.max(nested_data,function(d) { return d.values[0].date; })]).range([padding,w2-padding]);
+					var yScale = d3.scaleLinear().domain([d3.min(nested_data,function(d) {
+						return d.values.length;
+					}),d3.max(nested_data,function(d) {
+						return d.values.length;
+					})]).range([h2-padding,padding]);
+					// axis
+					var xAxis = d3.axisBottom().scale(xScale);
+					var yAxis = d3.axisLeft().scale(yScale);
+					// define line generator
+					var line = d3.line().x(function(d) { return xScale(d.values[0].date); }).y(function(d) { return yScale(d.values.length); });
+					plot.append("path").datum(nested_data).attr("class","line").attr("d",line).style("stroke","steelblue");
+					plot.append("text").attr("x",w2/2).attr("y",h2).style("text-anchor","middle").text("Year");
+					plot.append("text").attr("x",-(h2/2)).attr("y",0).attr("transform","rotate(-90)").attr("dy","1em").style("text-anchor","middle").text("# of Murders Comitted");
+					// add axis to plot
+					plot.append("g").attr("class","x axis").attr("transform","translate(0,"+(h2-padding*0.8)+")").call(xAxis);
+					plot.append("g").attr("class","y axis").attr("transform","translate("+padding*0.8+",0)").call(yAxis);
+
+					var circles = map.selectAll("circle")
+						.data(data)
+						.enter()
+						.append("circle")
+						.attr("cx",function(d) {
+							return projection([d.lon,d.lat])[0];
+						})
+						.attr("cy",function(d) {
+							return projection([d.lon,d.lat])[1];
+						})
+						.attr("r",3)
+						.attr("class","non_brushed")
+						.attr("date",function(d) {
+							return xScale(d.date);
+						});
+					circles.filter(function() {
+						var cx = d3.select(this).attr("cx"),
+						cy = d3.select(this).attr("cy");
+						return isNaN(cx) || isNaN(cy);
+					}).remove();
+					function highlightBrushedCircles() {
+						var s = d3.event.selection;
+						if (s == null) {
+							circles.attr("class","non_brushed");
+						}
+						else {
+							// set circles to non visible
+							circles.attr("class","non_visible");
+							var brush_coords = d3.brushSelection(this);
+							// style brushed circles
+							circles.filter(function (){
+								var x = d3.select(this).attr("date");
+								return isBrushed(brush_coords,x);
+							}).attr("class","brushed");
+						}
+					}
+					function animateBrush() {
+						// define our brush extent to be begin and end of the year
+						d3.select("g[id=xbrush]").transition().duration(500).ease(d3.easeLinear).call(brush.move,[xScale(parseDate('01/01/2006')),xScale(parseDate('12/31/2006'))]);
+						d3.select("g[id=xbrush]").transition().delay(500).duration(10000).ease(d3.easeLinear).call(brush.move,[xScale(parseDate('01/01/2016')),xScale.range()[1]]);
+					}
+					var brush = d3.brushX().on("start brush end",highlightBrushedCircles).extent([[padding,padding],[w2-padding,h2-padding]]);
+					plot.append("g").attr("class","brush").attr("id","xbrush").call(brush);
+					btn.on("click",animateBrush);
+				});
+			});
+			function isBrushed(brush_coords,x) {
+				 var x0 = brush_coords[0],
+					 x1 = brush_coords[1];
+				return x0 <= x && x <= x1;
+			}
+		</script>
+	</body>
+</html>
