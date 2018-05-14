@@ -203,9 +203,10 @@
 				</div>
 				<div class="collapse navbar-collapse" id="myNavbar">
 					<ul class="nav navbar-nav navbar-right">
-					<li><a href="#Story">STORY</a></li>
-					<li><a href="#part2">PART 2</a></li>
-					<li><a href="#Income_map">INCOME MAP</a></li>
+						<li><a href="#Story">STORY</a></li>
+						<li><a href="#Explanation">EXPLANATION</a></li>
+						<li><a href="#Income_map">INCOME MAP</a></li>
+						<li><a href="#External">EXTERNAL RESOURCES</a></li>
 					</ul>
 				</div>
 			</div>
@@ -221,38 +222,26 @@
 			<div class="row">
 				<div class="col-sm-12 col-md-12 col-lg-12">
 					<h2>Story behind the data</h2><br>
-					<p>We decided to work with the Copenhagen</p>
-					<ul>
-						<li>List item 1</li>
-						<li>List item 2</li>
-						<li>Sublist<ul>
-							<li>Sublist item 1</li>
-							<li>Sublist item 2</li>
-							<li>Sublist item 3</li>
-							<li><em>Ordering:</em> User Directed Path</li>
-							<li><em>Interactivity:</em> Filtering / Selection / Search.</li>
-							<li><em>Messaging:</em> Captions / Headlines.</li>
-						</ul></li>
-					</ul>
+					<p>We chose to show Socio-economic data set for Copenhagen. Because we are interested in knowing how people with different income are distributed in different regions of Copenhagen.</p>
+					<p>We have seperated income into three different levels where 1 is for low income, 2 is for medium income and 3 is for high income</p>
+					<p>Income is calculated as gross income per person at least 18 years old. Gross income is all income included under ordinary income taxation calculated before various deductions such as interest expenses. Income is calculated on the basis of the median where low incomes are at least 25% below the median, high incomes at least 25% over the median, and the rest is defined as intermediate income.</p>
+					<p>You can see on the map that wealthy areas are colored green and areas with low income is showed with blue color. We can explore how the educational level, age group and economic situation affects where people live.</p>
 				</div>
 			</div>
 		</div>
 		<!-- Container (Part 2 Section) -->
-		<div id="part2" class="container-fluid bg-grey">
+		<div id="Explanation" class="container-fluid bg-grey">
 			<div class="row">
 				<div class="col-sm-12 col-md-12 col-lg-12">
-					<h2>Part 2</h2><br>
+					<h2>Explanation of the visualization and how to use it</h2><br>
+					<p>Below we have created a brushable map. The map is colored based on the average income level in that region (on a scale from 1 to 3, where 1 is low income and 3 is high income). When you select some part of the map a histogram and donut chart will appear.</p>
+					<p>The histogram shows the average age groups in percent for the chosen areas and the donut chart shows the average educational groups for the areas.</p>
+					<p>The grey areas in the map is the parts where we have some missing data.</p>
+					<p>If you look to the right of the map you see a small button called "Filter by year" which changes the data displayed on the map to use the selected year. Notice that the in the year of 2014 there wasn't any income level available for any of the areas so we decided to use a Random Forest Regression model to predict the average income level based on the following variables:</p>
 					<ul>
-						<li>List item 1</li>
-						<li>List item 2</li>
-						<li>Sublist<ul>
-							<li>Sublist item 1</li>
-							<li>Sublist item 2</li>
-							<li>Sublist item 3</li>
-							<li><em>Ordering:</em> User Directed Path</li>
-							<li><em>Interactivity:</em> Filtering / Selection / Search.</li>
-							<li><em>Messaging:</em> Captions / Headlines.</li>
-						</ul></li>
+						<li>Education level</li>
+						<li>Age group</li>
+						<li>year</li>
 					</ul>
 				</div>
 			</div>
@@ -296,6 +285,21 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Container (Part 4 Section) -->
+		<div id="External" class="container-fluid bg-grey">
+			<div class="row">
+				<div class="col-sm-12 col-md-12 col-lg-12">
+					<h3>Links to external resources</h3><br>
+					<ul>
+						<li><a href="explainer_page.ipynb">Explainer page</a></li>
+						<li><a href="https://data.kk.dk/dataset/samlede-socio-data-kbh">Dataset</a></li>
+						<li><a href="processed_data.csv">Preprocessed Dataset</a></li>
+						<li><a href="https://github.com/mhattingpete/02806_SocialDataAnalysis/tree/master/Project">Github Repository</a></li>
+					</ul>
+				</div>
+			</div>
+		</div><br>
 
 		<!-- Container (Footer Section) -->
 		<footer class="container-fluid text-center">
@@ -344,7 +348,6 @@
 		<script type="text/javascript">
 			var linspace = function(start,stop,nsteps){
 				delta = (stop-start)/(nsteps-1);
-				//return d3.range(start,stop+delta,delta).slice(0,nsteps);
 				return d3.range(nsteps).map(function(i){ return start+i*delta; });
 			}
 			function precisionRound(number,precision) {
@@ -380,6 +383,7 @@
 			svg2.selectAll("rect").data(colorbarData).enter().append("rect").attr("width",50).attr("height",14).attr("x",0).attr("y",function(d,i) { return colorYscale(i); }).attr("fill",function(d) { return color(d); });
 
 			svg2.selectAll("text").data(colorbarData2).enter().append("text").attr("class","label").attr("transform",function(d,i) { return "translate(60,"+(colorYscale(2*i)+5)+")"; }).style("text-anchor","left").text(function(d) { return precisionRound(d,4); });
+			svg2.append("text").attr("transform","translate(0,"+(2*padding2)/3+")").text("Income (1 low, 3 high)");
 
 			var map = svg.append("g").attr("id","map").attr("class","features");
 
